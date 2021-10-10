@@ -94,62 +94,42 @@ print(f'Sample train_Y: {train_Y[0]}')
 from sklearn.model_selection import KFold
 from sklearn import tree
 
-k = 5
-kf = KFold(n_splits=k)
+def kfold_cross_validation(k, train_X, train_Y, depth):
+  print(f'Running {k}-fold cross validation for depth: {depth}')
+  k = 5
+  kf = KFold(n_splits=k)
 
+  accuracy_scores = []
+
+  for train_index, test_index in kf.split(train_X):
+    cf_train_X = [train_X[index] for index in train_index]
+    cf_train_Y = [train_Y[index] for index in train_index]
+    cf_test_X = [train_X[index] for index in test_index]
+    cf_test_Y = [train_Y[index] for index in test_index]
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(cf_train_X, cf_train_Y)
+    predicted_Y = clf.predict(cf_test_X)
+    accuracy = get_accuracy(predicted_Y, cf_test_Y)
+    accuracy_scores.append(accuracy)
+    print(f'Obtained split accuracy of: {accuracy}')
+
+  average_accuracy = sum(accuracy_scores) / k
+  print(f'Completed {k}-fold cross validation for depth: {depth}')
+  print(f'Obtained average accuracy of: {average_accuracy}')
+  return average_accuracy
+
+
+# In[2]:
+
+
+depths = [5, 10, 15, 20]
 accuracy_scores = []
+k = 5
+print(f'Running {k}-fold cross validation for depths: {depths}')
+for depth in depths:
+  average_accuracy = kfold_cross_validation(k, train_X, train_Y, depth)
+  accuracy_scores.append(average_accuracy)
 
-for train_index, test_index in kf.split(train_X):
-  cf_train_X = [train_X[index] for index in train_index]
-  cf_train_Y = [train_Y[index] for index in train_index]
-  cf_test_X = [train_X[index] for index in test_index]
-  cf_test_Y = [train_Y[index] for index in test_index]
-  clf = tree.DecisionTreeClassifier()
-  clf = clf.fit(cf_train_X, cf_train_Y)
-  predicted_Y = clf.predict(cf_test_X)
-  accuracy = get_accuracy(predicted_Y, cf_test_Y)
-  accuracy_scores.append(accuracy)
-
-average_accuracy = sum(accuracy_scores) / k
-print(f'Accuracy for each fold: {accuracy_scores}')
-print(f'Average accuracy: {average_accuracy}')
-
-
-# # Train Model (Decision Tree)
-
-# In[38]:
-
-
-
-# ~170s for 1000 training instances max_depth=None RGB
-
-# ~42.2s for 1000 training instances max_depth=None Grayscale
-
-# ~89.5s for 1000 training instances max_depth=5 RGB
-
-
-# # Evaluate Model
-
-# In[37]:
-
-
-# 0.29 ~85.3s for 1000 training instances max_depth=None RGB
-
-# 0.266 ~0.2s for 1000 training instances max_depth=None Grayscale
-
-# 0.216 ~68.4s for 1000 training instances max_depth=5 RGB
-
-
-# In[35]:
-
-
-# test_X = []
-# test_Y = []
-# for ex in test_ds_numpy:
-#   x = ex[0].flatten() # 256 x 256 (Grayscale)
-#   y = ex[1]
-#   test_X.append(x)
-#   test_Y.append(y)
-# print(f'Sample test_X: {test_X[0]}')
-# print(f'Sample test_Y: {test_Y[0]}')
+index = accuracy_scores.index(max(accuracy_scores))
+print(f'Best depth: {depths[index]}')
 
