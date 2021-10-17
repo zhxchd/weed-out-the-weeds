@@ -3,7 +3,7 @@
 
 # # Retrieve Dataset
 
-# In[2]:
+# In[64]:
 
 
 import tensorflow_datasets as tfds
@@ -15,7 +15,7 @@ raw_ds = tfds.load('deep_weeds', split="train", as_supervised=True)
 
 # # Pre-process Dataset
 
-# In[4]:
+# In[65]:
 
 
 def negative_class_filter(x, y):
@@ -24,15 +24,19 @@ def negative_class_filter(x, y):
 def rgb_to_grayscale_map(x, y):
   return (tf.reduce_mean(x, 2), y)
 
+def downsampling(x, y):
+  return (tf.image.resize(x, [64, 64]), y)
+
 full_ds = raw_ds.filter(negative_class_filter) # remove instances from negative class
 full_ds_size = full_ds.reduce(0, lambda x,_: x + 1).numpy()
 full_ds = full_ds.shuffle(full_ds_size) # shuffle dataset
-full_ds = full_ds.map(rgb_to_grayscale_map) # convert to grayscale
+full_ds = full_ds.map(downsampling)
+# full_ds = full_ds.map(rgb_to_grayscale_map) # convert to grayscale
 
 
 # # Train Test Split
 
-# In[39]:
+# In[66]:
 
 
 train_size = int(0.7 * full_ds_size)
@@ -59,9 +63,35 @@ print(f'Total number of testing instances = {test_size}')
 # TODO: Abstract function
 
 
+# In[67]:
+
+
+train_X = []
+train_Y = []
+for ex in train_ds_numpy:
+  x = ex[0].flatten()
+  y = ex[1]
+  train_X.append(x)
+  train_Y.append(y)
+print(f'Sample train_X: {train_X[0]}')
+print(f'Dimension of train_X: {len(train_X[0])}')
+print(f'Sample train_Y: {train_Y[0]}')
+
+test_X = []
+test_Y = []
+for ex in test_ds_numpy:
+  x = ex[0].flatten()
+  y = ex[1]
+  test_X.append(x)
+  test_Y.append(y)
+print(f'Sample test_X: {test_X[0]}')
+print(f'Dimension of test_X: {len(test_X[0])}')
+print(f'Sample test_Y: {test_Y[0]}')
+
+
 # # k-Fold Cross Validation
 
-# In[31]:
+# In[68]:
 
 
 def get_accuracy(predicted_Y, actual_Y):
@@ -74,25 +104,18 @@ def get_accuracy(predicted_Y, actual_Y):
   return accuracy
 
 
-# In[32]:
-
-
-train_X = []
-train_Y = []
-for ex in test_ds_numpy:
-  x = ex[0].flatten()
-  y = ex[1]
-  train_X.append(x)
-  train_Y.append(y)
-print(f'Sample train_X: {train_X[0]}')
-print(f'Sample train_Y: {train_Y[0]}')
-
-
-# In[34]:
+# In[69]:
 
 
 from sklearn.model_selection import KFold
 from sklearn import tree
+
+def run_decision_tree(train_X, train_Y, test_X, test_Y, depth):
+    clf = tree.DecisionTreeClassifier(max_depth=depth)
+    clf = clf.fit(train_X, train_Y)
+    predicted_Y = clf.predict(test_X)
+    accuracy = get_accuracy(predicted_Y, test_Y)
+    return accuracy
 
 def kfold_cross_validation(k, train_X, train_Y, depth):
   print(f'Running {k}-fold cross validation for depth: {depth}')
@@ -106,10 +129,7 @@ def kfold_cross_validation(k, train_X, train_Y, depth):
     cf_train_Y = [train_Y[index] for index in train_index]
     cf_test_X = [train_X[index] for index in test_index]
     cf_test_Y = [train_Y[index] for index in test_index]
-    clf = tree.DecisionTreeClassifier()
-    clf = clf.fit(cf_train_X, cf_train_Y)
-    predicted_Y = clf.predict(cf_test_X)
-    accuracy = get_accuracy(predicted_Y, cf_test_Y)
+    accuracy = run_decision_tree(cf_train_X, cf_train_Y, cf_test_X, cf_test_Y, depth)
     accuracy_scores.append(accuracy)
     print(f'Obtained split accuracy of: {accuracy}')
 
@@ -119,17 +139,31 @@ def kfold_cross_validation(k, train_X, train_Y, depth):
   return average_accuracy
 
 
-# In[2]:
+# In[70]:
 
 
-depths = [5, 10, 15, 20]
-accuracy_scores = []
-k = 5
-print(f'Running {k}-fold cross validation for depths: {depths}')
-for depth in depths:
-  average_accuracy = kfold_cross_validation(k, train_X, train_Y, depth)
-  accuracy_scores.append(average_accuracy)
+def get_best_depth(depths):
+  accuracy_scores = []
+  k = 5
+  print(f'Running {k}-fold cross validation for depths: {depths}')
+  for depth in depths:
+    average_accuracy = kfold_cross_validation(k, train_X, train_Y, depth)
+    accuracy_scores.append(average_accuracy)
 
-index = accuracy_scores.index(max(accuracy_scores))
-print(f'Best depth: {depths[index]}')
+  index = accuracy_scores.index(max(accuracy_scores))
+  print(f'Average scores for each depth: {accuracy_scores}')
+  print(f'Best depth: {depths[index]}')
+  return depths[index]
+
+depths = [4, 6, 8, 10, 12, 16, 18, 20]
+best_depth = get_best_depth(depths)
+
+
+# # Test Model
+
+# In[72]:
+
+
+final_accuracy = run_decision_tree(train_X, train_Y, test_X, test_Y, best_depth)
+print(f'Obtained final accuracy of {final_accuracy}')
 
