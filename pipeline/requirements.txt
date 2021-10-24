@@ -1,0 +1,8 @@
+importlib
+numpy
+matplotlib
+tensorflow_datasets
+tensorflow
+opencv-python
+scikit-learn
+scikit-image
