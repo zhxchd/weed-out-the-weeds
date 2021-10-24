@@ -6,3 +6,4 @@ tensorflow
 opencv-python
 scikit-learn
 scikit-image
+IPython

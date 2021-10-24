@@ -8,12 +8,6 @@ from preprocess import retrieve_dataset, preprocess, to_np
 from IPython import get_ipython
 
 # %% [markdown]
-# # Import Libraries
-
-# %%
-get_ipython().run_line_magic('pip', 'install -r requirements.txt')
-
-# %% [markdown]
 # # Retrieve Dataset
 
 # %%
