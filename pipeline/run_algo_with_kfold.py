@@ -19,10 +19,11 @@ def run_decision_tree(train_X, train_Y, test_X, test_Y, options):
 
 
 def run_svm(train_X, train_Y, test_X, test_Y, options):
-    kernel = options['kernel']
+    kernel = options.get('kernel', 'linear')
     C = options.get('C', 1)
     decision_function_shape = options.get('decision_function_shape', 'ovo')
-    clf = svm.SVC(kernel=kernel, C=C,
+    gamma = options.get('gamma', 'scale')
+    clf = svm.SVC(kernel=kernel, C=C, gamma=gamma,
                   decision_function_shape=decision_function_shape)
     clf = clf.fit(train_X, train_Y)
     accuracy = clf.score(test_X, test_Y)
@@ -52,5 +53,5 @@ def kfold_cross_validation(k, train_X, train_Y, algo, options):
     average_accuracy = sum(accuracies) / k
     print(
         f'Completed {k}-fold cross validation for {algo} with {str(options)}')
-    print(f'Obtained average accuracy of: {average_accuracy}')
+    print(f'Obtained average accuracy of: {average_accuracy}\n')
     return average_accuracy
