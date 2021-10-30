@@ -12,8 +12,7 @@ def retrieve_dataset(should_shuffle_files: bool):
         with_info=True,
         as_supervised=True,
     )
-    return (train_ds_raw, test_ds_raw), metadata
-
+    return (train_ds_raw, test_ds_raw), metadata    
 
 def filter_negative(x, y):
     return tf.not_equal(y, 8)
@@ -38,11 +37,13 @@ def normalize(x, y):
 
 def preprocess(dataset, options):
     (is_filter_negative,
+     reduce_dataset_to,
      is_grayscale,
      is_downsample64,
      is_downsample128,
      is_normalize) = itemgetter(
         'is_filter_negative',
+        'reduce_dataset_to',
         'is_grayscale',
         'is_downsample64',
         'is_downsample128',
@@ -50,9 +51,11 @@ def preprocess(dataset, options):
     )(options)
 
     preprocessed_dataset = dataset
-
     if is_filter_negative is True:
         preprocessed_dataset = preprocessed_dataset.filter(filter_negative)
+
+    if reduce_dataset_to > 0:
+        preprocessed_dataset = preprocessed_dataset.take(reduce_dataset_to)
 
     if is_grayscale is True:
         preprocessed_dataset = preprocessed_dataset.map(grayscale)
