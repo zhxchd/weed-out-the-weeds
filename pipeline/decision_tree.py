@@ -45,7 +45,7 @@ test_ds = preprocess(test_ds_raw, {
 
 # # Extract X_train, Y_train, X_test, Y_test
 
-# In[13]:
+# In[3]:
 
 
 train_ds_numpy = to_np(train_ds)
@@ -67,7 +67,7 @@ from transfer_learning import init_conv_base, extract_features
 conv_base = init_conv_base(X_train[0])
 
 
-# In[14]:
+# In[5]:
 
 
 train_features, train_labels = extract_features(conv_base, X_train, Y_train)
@@ -76,7 +76,7 @@ test_features, test_labels = extract_features(conv_base, X_test, Y_test)
 
 # # Flatten To Fit Decision Tree
 
-# In[28]:
+# In[18]:
 
 
 X_train_flatten = list(map(lambda x: x.flatten(), train_features))
@@ -84,10 +84,13 @@ Y_train = train_labels
 X_test_flatten = list(map(lambda x: x.flatten(), test_features))
 Y_test = test_labels
 
+print(f'Number of training instances: {len(X_train_flatten)}')
+print(f'Number of features: {len(X_train_flatten[0])}')
+
 
 # # Train Decision Tree Model With K-Fold Cross Validation
 
-# In[ ]:
+# In[20]:
 
 
 import importlib
@@ -96,8 +99,10 @@ importlib.reload(run_algo_with_kfold)
 from run_algo_with_kfold import kfold_cross_validation
 
 depths = [5, 6, 7, 8, 9, 10]
+k = 5
 final_accuracies = []
-for n_neighbors in n_neighbors_arr:
-  final_accuracy = kfold_cross_validation(k, X_train_flatten, y_train, 'decision_tree', {'depth': depths})
+
+for depth in depths:
+  final_accuracy = kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth})
   final_accuracies.append(final_accuracy)
 

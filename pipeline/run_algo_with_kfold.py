@@ -59,12 +59,12 @@ def get_precision_scores(clf, test_X, test_Y):
   f1_score_macro = f1_score(test_Y, pred_Y, average='macro', labels=np.unique(pred_Y))
   micro_avg = precision_score(test_Y, pred_Y, average='micro', labels=np.unique(pred_Y))
   f1_score_micro = f1_score(test_Y, pred_Y, average = 'micro',labels=np.unique(pred_Y))
-  rocauc_score = roc_auc_score(test_Y, clf.predict_proba(test_X), multi_class='ovr')
+#   rocauc_score = roc_auc_score(test_Y, clf.predict_proba(test_X), multi_class='ovr')
   return {
     'accuracy': accuracy,
     'macro_avg': macro_avg,
     'f1_score_macro': f1_score_macro,
     'micro_avg': micro_avg,
-    'f1_score_micro': f1_score_micro,
-    'roc_auc_score': rocauc_score
+    'f1_score_micro': f1_score_micro
+    # 'roc_auc_score': rocauc_score
   }
