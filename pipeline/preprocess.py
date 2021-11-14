@@ -18,6 +18,27 @@ def filter_negative(x, y):
     return tf.not_equal(y, 8)
 
 
+def filter_non_negative(x, y):
+    return tf.equal(y, 8)
+
+
+def count_class(counts, batch):
+    labels = batch[1]
+    for i in range(8):
+        cc = tf.cast(labels == i, tf.int32)
+        counts[i] += tf.reduce_sum(cc)
+    return counts
+
+
+def get_average_count(dataset):
+    initial_state = dict((i, 0) for i in range(8))
+    counts = dataset.reduce(initial_state, count_class)
+    total = 0
+    for k, v in counts.items():
+        total += v.numpy()
+    return int(total / 8)
+
+
 def grayscale(x, y):
     return (tf.reduce_mean(x, 2), y)
 
@@ -36,13 +57,13 @@ def normalize(x, y):
 
 
 def preprocess(dataset, options):
-    (is_filter_negative,
+    (is_undersample_negative,
      reduce_dataset_to,
      is_grayscale,
      is_downsample64,
      is_downsample128,
      is_normalize) = itemgetter(
-        'is_filter_negative',
+        'is_undersample_negative',
         'reduce_dataset_to',
         'is_grayscale',
         'is_downsample64',
@@ -51,8 +72,15 @@ def preprocess(dataset, options):
     )(options)
 
     preprocessed_dataset = dataset
-    if is_filter_negative is True:
-        preprocessed_dataset = preprocessed_dataset.filter(filter_negative)
+
+    if is_undersample_negative is True:
+        non_negative_dataset = preprocessed_dataset.filter(filter_negative)
+        negative_dataset = preprocessed_dataset.filter(filter_non_negative)
+        average_count = get_average_count(non_negative_dataset)
+        negative_dataset = negative_dataset.take(average_count)
+        preprocessed_dataset = non_negative_dataset.concatenate(negative_dataset)
+        dataset_size = preprocessed_dataset.reduce(0, lambda x,_: x + 1).numpy()
+        preprocessed_dataset = preprocessed_dataset.shuffle(dataset_size)
 
     if reduce_dataset_to > 0:
         preprocessed_dataset = preprocessed_dataset.take(reduce_dataset_to)
