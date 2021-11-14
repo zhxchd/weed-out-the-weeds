@@ -3,7 +3,7 @@
 
 # # Import Libraries
 
-# In[1]:
+# In[2]:
 
 
 import numpy as np
@@ -17,7 +17,7 @@ from sklearn import neighbors
 
 # # Retrieve Dataset
 
-# In[2]:
+# In[3]:
 
 
 from preprocess import retrieve_dataset, preprocess, to_np
@@ -42,10 +42,31 @@ test_ds = preprocess(test_ds_raw, {
   'is_normalize': False,
 })
 
+def count_class(counts, batch):
+    labels = batch[1]
+    for i in range(9):
+        cc = tf.cast(labels == i, tf.int32)
+        counts[i] += tf.reduce_sum(cc)
+    return counts
+
+initial_state = dict((i, 0) for i in range(9))
+counts = train_ds.reduce(initial_state=initial_state,
+                         reduce_func=count_class)
+
+print("Class breakdown for train dataset:")
+print([(k, v.numpy()) for k, v in counts.items()])
+
+initial_state = dict((i, 0) for i in range(9))
+counts = test_ds.reduce(initial_state=initial_state,
+                         reduce_func=count_class)
+
+print("Class breakdown for test dataset:")
+print([(k, v.numpy()) for k, v in counts.items()])
+
 
 # # Extract X_train, Y_train, X_test, Y_test
 
-# In[3]:
+# In[ ]:
 
 
 train_ds_numpy = to_np(train_ds)
@@ -60,14 +81,14 @@ Y_test = [label for example, label in test_ds_numpy]
 
 # # Perform Transfer Learning
 
-# In[4]:
+# In[ ]:
 
 
 from transfer_learning import init_conv_base, extract_features
 conv_base = init_conv_base(X_train[0])
 
 
-# In[5]:
+# In[ ]:
 
 
 train_features, train_labels = extract_features(conv_base, X_train, Y_train)
@@ -76,7 +97,7 @@ test_features, test_labels = extract_features(conv_base, X_test, Y_test)
 
 # # Flatten To Fit Decision Tree
 
-# In[18]:
+# In[ ]:
 
 
 X_train_flatten = list(map(lambda x: x.flatten(), train_features))
@@ -90,7 +111,7 @@ print(f'Number of features: {len(X_train_flatten[0])}')
 
 # # Train Decision Tree Model With K-Fold Cross Validation
 
-# In[20]:
+# In[7]:
 
 
 import importlib
@@ -105,4 +126,10 @@ final_accuracies = []
 for depth in depths:
   final_accuracy = kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth})
   final_accuracies.append(final_accuracy)
+
+
+# In[6]:
+
+
+print(final_accuracies)
 
