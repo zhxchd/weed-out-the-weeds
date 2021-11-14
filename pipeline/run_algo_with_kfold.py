@@ -33,7 +33,8 @@ def kfold_cross_validation(k, train_X, train_Y, algo, options):
     print(f'Running {k}-fold cross validation for {algo} with {str(options)}')
     kf = KFold(n_splits=k)
 
-    evaluations = []
+    accuracies = []
+    classifiers = []
 
     for train_index, test_index in kf.split(train_X):
         cf_train_X = [train_X[index] for index in train_index]
@@ -41,16 +42,20 @@ def kfold_cross_validation(k, train_X, train_Y, algo, options):
         cf_test_X = [train_X[index] for index in test_index]
         cf_test_Y = [train_Y[index] for index in test_index]
         clf = algos[algo](cf_train_X, cf_train_Y, options)
-        evaluation = get_precision_scores(clf, cf_test_X, cf_test_Y)
-        evaluations.append(evaluation)
-        print(f'Split evaluation metrics: {str(evaluation)}')
+        # evaluation = get_precision_scores(clf, cf_test_X, cf_test_Y)
+        accuracy = clf.score(cf_test_X, cf_test_Y)
+        accuracies.append(accuracy)
+        classifiers.append(clf)
+        print(f'Split accuracy: {str(accuracy)}')
 
-    assert(len(evaluations) == k)
-    average_accuracy = sum(evaluation['accuracy'] for evaluation in evaluations) / k
+    assert(len(accuracies) == k)
+    # average_accuracy = sum(evaluation['accuracy'] for evaluation in evaluations) / k
+    average_accuracy = sum(accuracies) / k
     print(
         f'Completed {k}-fold cross validation for {algo} with {str(options)}')
     print(f'Obtained average accuracy of: {average_accuracy}\n')
-    return average_accuracy
+    best_classifier_idx = np.argmax(accuracies)
+    return (classifiers[best_classifier_idx], max(accuracies))
 
 def get_precision_scores(clf, test_X, test_Y):
   pred_Y = clf.predict(test_X)
@@ -59,12 +64,16 @@ def get_precision_scores(clf, test_X, test_Y):
   f1_score_macro = f1_score(test_Y, pred_Y, average='macro', labels=np.unique(pred_Y))
   micro_avg = precision_score(test_Y, pred_Y, average='micro', labels=np.unique(pred_Y))
   f1_score_micro = f1_score(test_Y, pred_Y, average = 'micro',labels=np.unique(pred_Y))
-#   rocauc_score = roc_auc_score(test_Y, clf.predict_proba(test_X), multi_class='ovr')
+  rocauc_score = roc_auc_score(test_Y, clf.predict_proba(test_X), multi_class='ovr')
   return {
     'accuracy': accuracy,
     'macro_avg': macro_avg,
     'f1_score_macro': f1_score_macro,
     'micro_avg': micro_avg,
-    'f1_score_micro': f1_score_micro
-    # 'roc_auc_score': rocauc_score
+    'f1_score_micro': f1_score_micro,
+    'roc_auc_score': rocauc_score
   }
+
+def visualize_roc_auc_curve():
+    # https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py
+    pass
