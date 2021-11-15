@@ -1,9 +1,12 @@
+from itertools import cycle
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.model_selection import KFold
 from sklearn import neighbors, tree, svm
 from sklearn.metrics import precision_score, f1_score, roc_auc_score
-import numpy as np
-# import evaluation
-# from evaluation import get_precision_scores
+from sklearn.metrics import roc_curve, auc
+from sklearn.multiclass import OneVsRestClassifier
 
 def run_knn(train_X, train_Y, options):
     n_neighbors = options['n_neighbors']
@@ -74,6 +77,80 @@ def get_precision_scores(clf, test_X, test_Y):
     'roc_auc_score': rocauc_score
   }
 
-def visualize_roc_auc_curve():
+def binarize(dataset, label):
+    res = []
+    for data in dataset:
+      if int(data) == label:
+          res.append(1)
+      else:
+          res.append(-1)
+    return res
+        
+
+def get_roc_auc_curve(clf, X_train, y_train, X_test, y_test, options):
     # https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py
-    pass
+    n_classes = len(np.unique(y_train))
+    is_svm = options['is_svm']
+    classifier = OneVsRestClassifier(clf)
+    if is_svm:
+        y_score = classifier.fit(X_train, y_train).decision_function(X_test)
+    else: 
+        y_score = classifier.fit(X_train, y_train).predict_proba(X_test)
+    # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(n_classes):
+        binarized_y_test = binarize(y_test, i)
+        fpr[i], tpr[i], _ = roc_curve(binarized_y_test, y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+    return (fpr, tpr, roc_auc)
+
+def visualize_roc_auc_curve(title, fpr, tpr, roc_auc, n_classes):
+     # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
+
+    mean_tpr /= n_classes
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
+    # Plot all ROC curves
+    lw = 2
+    plt.figure()
+    plt.plot(
+        fpr["macro"],
+        tpr["macro"],
+        label="macro-average ROC curve (area = {0:0.2f})".format(roc_auc["macro"]),
+        color="deeppink",
+        linestyle=":",
+        linewidth=4,
+    )
+
+    colors = cycle(["aqua", "darkorange", "cornflowerblue", 
+    "darkviolet", "azure", "burlywood", 
+    "coral", "darksalmon","darkseagreen"])
+
+    for i, color in zip(range(n_classes), colors):
+        plt.plot(
+            fpr[i],
+            tpr[i],
+            color=color,
+            lw=lw,
+            label="ROC curve of class {0} (area = {1:0.2f})".format(i, roc_auc[i]),
+        )
+    
+    plt.plot([0, 1], [0, 1], "k--", lw=lw)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(title)
+    plt.legend(loc="lower right")
+    plt.show()
