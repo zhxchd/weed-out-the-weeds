@@ -30,7 +30,13 @@ def run_svm(train_X, train_Y, options):
     clf = clf.fit(train_X, train_Y)
     return clf
 
-algos = {'knn': run_knn, 'decision_tree': run_decision_tree, 'svm': run_svm}
+def run_logistic_reg(train_X, train_Y, test_X, test_Y, options):
+  max_iter = options['max_iter']
+  clf = LogisticRegression(max_iter=max_iter)
+  clf.fit(train_X, train_Y)
+  return clf
+
+algos = {'knn': run_knn, 'decision_tree': run_decision_tree, 'svm': run_svm, 'logistic' : run_logistic_reg }
 
 def kfold_cross_validation(k, train_X, train_Y, algo, options):
     print(f'Running {k}-fold cross validation for {algo} with {str(options)}')
