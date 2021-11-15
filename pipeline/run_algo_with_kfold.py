@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import KFold
 from sklearn import neighbors, tree, svm
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import precision_score, f1_score, roc_auc_score
 from sklearn.metrics import roc_curve, auc
 from sklearn.multiclass import OneVsRestClassifier
