@@ -12,7 +12,8 @@ def retrieve_dataset(should_shuffle_files: bool):
         with_info=True,
         as_supervised=True,
     )
-    return (train_ds_raw, test_ds_raw), metadata    
+    return (train_ds_raw, test_ds_raw), metadata
+
 
 def filter_negative(x, y):
     return tf.not_equal(y, 8)
@@ -78,8 +79,10 @@ def preprocess(dataset, options):
         negative_dataset = preprocessed_dataset.filter(filter_non_negative)
         average_count = get_average_count(non_negative_dataset)
         negative_dataset = negative_dataset.take(average_count)
-        preprocessed_dataset = non_negative_dataset.concatenate(negative_dataset)
-        dataset_size = preprocessed_dataset.reduce(0, lambda x,_: x + 1).numpy()
+        preprocessed_dataset = non_negative_dataset.concatenate(
+            negative_dataset)
+        dataset_size = preprocessed_dataset.reduce(
+            0, lambda x, _: x + 1).numpy()
         preprocessed_dataset = preprocessed_dataset.shuffle(dataset_size)
 
     if reduce_dataset_to > 0:
