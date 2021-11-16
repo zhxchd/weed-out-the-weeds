@@ -32,7 +32,7 @@ def run_svm(train_X, train_Y, options):
     decision_function_shape = options.get('decision_function_shape', 'ovo')
     gamma = options.get('gamma', 'scale')
     clf = svm.SVC(kernel=kernel, C=C, gamma=gamma,
-                  decision_function_shape=decision_function_shape)
+                  decision_function_shape=decision_function_shape, probability=True)
     clf = clf.fit(train_X, train_Y)
     return clf
 
@@ -50,7 +50,7 @@ algos = {'knn': run_knn, 'decision_tree': run_decision_tree,
 
 def get_model_file_name(algo, options, append_text=''):
     initial_name = f'{algo}_{str(options)}'
-    processed_name = re.sub(r'[^\w]', ' ', initial_name).replace(' ', '_')
+    processed_name = re.sub(r'[^\w]', '', initial_name).replace(' ', '_')
     file_name = f'models/{processed_name}'
     if append_text:
         file_name += f'_{append_text}'
@@ -60,21 +60,21 @@ def get_model_file_name(algo, options, append_text=''):
 
 def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, test_index, append_text=''):
     model_file_name = get_model_file_name(algo, options, append_text)
+    cf_test_X = [train_X[index] for index in test_index]
+    cf_test_Y = [train_Y[index] for index in test_index]
     try:
         model = pickle.load(open(model_file_name, 'rb'))
         print(f'Loaded kfold model from file: {model_file_name}')
     except FileNotFoundError:
         cf_train_X = [train_X[index] for index in train_index]
         cf_train_Y = [train_Y[index] for index in train_index]
-        cf_test_X = [train_X[index] for index in test_index]
-        cf_test_Y = [train_Y[index] for index in test_index]
-        clf = algos[algo](cf_train_X, cf_train_Y, options)
-        # evaluation = get_precision_scores(clf, cf_test_X, cf_test_Y)
-        accuracy = clf.score(cf_test_X, cf_test_Y)
-        print(f'Split accuracy: {str(accuracy)}')
-
+        model = algos[algo](cf_train_X, cf_train_Y, options)
         pickle.dump(model, open(model_file_name, 'wb'))
         print(f'Trained kfold model and saved to file: {model_file_name}')
+    finally:
+        # evaluation = get_precision_scores(model, cf_test_X, cf_test_Y)
+        accuracy = model.score(cf_test_X, cf_test_Y)
+        print(f'Split accuracy: {str(accuracy)}')
     return (model, accuracy)
 
 
