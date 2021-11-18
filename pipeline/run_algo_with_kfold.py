@@ -106,7 +106,7 @@ def kfold_cross_validation(k, train_X, train_Y, algo, options):
         f'Completed {k}-fold cross validation for {algo} with {str(options)}')
     print(f'Obtained average accuracy of: {average_accuracy}\n')
     model = load_or_train_model(algo, options, train_X, train_Y)
-    return (model, max(accuracies))
+    return (model, average_accuracy)
 
 
 def get_precision_scores(clf, test_X, test_Y):
