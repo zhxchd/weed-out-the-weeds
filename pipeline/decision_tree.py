@@ -119,7 +119,7 @@ import run_algo_with_kfold
 importlib.reload(run_algo_with_kfold)
 from run_algo_with_kfold import kfold_cross_validation, load_or_train_model, get_precision_scores
 
-depths = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+depths = [5, 6, 7, 8, 9, 10]
 k = 5
 clfs_and_accuracies = []
 
@@ -136,6 +136,7 @@ for idx, val in enumerate(clfs_and_accuracies):
     best_depth = depths[idx]
     highest_accuracy = accuracy
 
+print(f'Best depth: {best_depth}')
 
 # # Train Final Model
 
