@@ -109,7 +109,7 @@ print(f'Number of training instances: {len(X_train_flatten)}')
 print(f'Number of features: {len(X_train_flatten[0])}')
 
 
-# # Find Best Depth Using K-Fold Cross Validation
+# # Find Best Depth Using K-fold Cross Validation
 
 # In[ ]:
 
@@ -117,33 +117,33 @@ print(f'Number of features: {len(X_train_flatten[0])}')
 import importlib
 import run_algo_with_kfold
 importlib.reload(run_algo_with_kfold)
-from run_algo_with_kfold import kfold_cross_validation, train_final_model, get_precision_scores
+from run_algo_with_kfold import kfold_cross_validation, train_model, get_precision_scores
 
-depths = [5, 6, 7, 8, 9, 10]
+depths = [3, 4, 5, 6, 7, 8, 9, 10]
 k = 5
-clfs_and_accuracies = []
+
+accuracies = []
 
 for depth in depths:
-  clf_and_accuracy = kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth})
-  clfs_and_accuracies.append(clf_and_accuracy)
+  accuracies.append(kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth}))
 
 highest_accuracy = 0
 best_depth = 0
 
-for idx, val in enumerate(clfs_and_accuracies):
-  clf, accuracy = val
+for idx, accuracy in enumerate(accuracies):
   if accuracy > highest_accuracy:
     best_depth = depths[idx]
     highest_accuracy = accuracy
 
 print(f'Best depth: {best_depth}')
 
+
 # # Train Final Model
 
 # In[ ]:
 
 
-model = train_final_model('decision_tree', {'depth': depth}, X_train_flatten, Y_train)
+model = train_model('decision_tree', {'depth': depth}, X_train_flatten, Y_train, True)
 
 print(get_precision_scores(model, X_test_flatten, Y_test))
 

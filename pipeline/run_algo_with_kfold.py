@@ -47,16 +47,6 @@ def run_logistic_reg(train_X, train_Y, options):
 algos = {'knn': run_knn, 'decision_tree': run_decision_tree,
          'svm': run_svm, 'logistic': run_logistic_reg}
 
-
-def get_model_file_name(algo, options, append_text=''):
-    initial_name = f'{algo}_{str(options)}'
-    processed_name = re.sub(r'[^\w]', '', initial_name).replace(' ', '_')
-    file_name = f'models/{processed_name}'
-    if append_text:
-        file_name += f'_{append_text}'
-    file_name += '.pickle'
-    return file_name
-
 def get_final_model_file_name(algo, options, append_text=''):
     initial_name = f'{algo}_{str(options)}_final'
     processed_name = re.sub(r'[^\w]', '', initial_name).replace(' ', '_')
@@ -66,66 +56,41 @@ def get_final_model_file_name(algo, options, append_text=''):
     file_name += '.pickle'
     return file_name
 
-
-def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, validation_index, append_text=''):
-    model_file_name = get_model_file_name(algo, options, append_text)
-    validation_X = [train_X[index] for index in validation_index]
-    validation_Y = [train_Y[index] for index in validation_index]
-    try:
-        model = pickle.load(open(model_file_name, 'rb'))
-        print(f'Loaded kfold model from file: {model_file_name}')
-    except FileNotFoundError:
-        cf_train_X = [train_X[index] for index in train_index]
-        cf_train_Y = [train_Y[index] for index in train_index]
-        model = algos[algo](cf_train_X, cf_train_Y, options)
-        pickle.dump(model, open(model_file_name, 'wb'))
-        print(f'Trained kfold model and saved to file: {model_file_name}')
-    finally:
-        # evaluation = get_precision_scores(model, validation_X, validation_Y)
-        accuracy = model.score(validation_X, validation_Y)
-        print(f'Split accuracy: {str(accuracy)}')
-    return (model, accuracy)
-
-
-def load_or_train_model(algo, options, train_X, train_Y):
-    model_file_name = get_model_file_name(algo, options)
-    try:
-        model = pickle.load(open(model_file_name, 'rb'))
-        print(f'Loaded model from file: {model_file_name}')
-    except FileNotFoundError:
-        model = algos[algo](train_X, train_Y, options)
-
-        pickle.dump(model, open(model_file_name, 'wb'))
-        print(f'Trained model and saved to file: {model_file_name}')
-    return model
-
-
-def train_final_model(algo, options, train_X, train_Y):
-    model_file_name = get_final_model_file_name(algo, options)
+def train_model(algo, options, train_X, train_Y, save_model=False):
     model = algos[algo](train_X, train_Y, options)
 
-    pickle.dump(model, open(model_file_name, 'wb'))
-    print(f'Trained final model and saved to file: {model_file_name}\n')
+    if save_model:
+        model_file_name = get_final_model_file_name(algo, options)
+        pickle.dump(model, open(model_file_name, 'wb'))
+        print(f'Saved final model to file: {model_file_name}\n')
     return model
 
 
 def kfold_cross_validation(k, train_X, train_Y, algo, options):
     print(f'Running {k}-fold cross validation for {algo} with {str(options)}')
     kf = KFold(n_splits=k)
+    folds = kf.split(train_X, train_Y)
+    
+    accuracies = []
 
-    clfs_and_accuracies = [load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, test_index, str(
-        index)) for index, (train_index, test_index) in enumerate(kf.split(train_X))]
+    for idx, (train_indices, validation_indices) in enumerate(folds):
+        split_train_X = [train_X[index] for index in train_indices]
+        split_train_Y = [train_Y[index] for index in train_indices]
+        split_validation_X = [train_X[index] for index in validation_indices]
+        split_validation_Y = [train_Y[index] for index in validation_indices]
+        model = train_model(algo, options, split_train_X, split_train_Y)
+        accuracy = model.score(split_validation_X, split_validation_Y)
+        accuracies.append(accuracy)
+        print(f'Split accuracy: {accuracy}')
 
-    accuracies = [accuracy for (model, accuracy) in clfs_and_accuracies]
     assert(len(accuracies) == k)
-    # average_accuracy = sum(evaluation['accuracy'] for evaluation in evaluations) / k
-    average_accuracy = sum(accuracies) / k
-    print(
-        f'Completed {k}-fold cross validation for {algo} with {str(options)}')
-    print(f'Obtained average accuracy of: {average_accuracy}')
-    model = load_or_train_model(algo, options, train_X, train_Y)
-    return (model, average_accuracy)
 
+    average_accuracy = sum(accuracies) / k
+
+    print(f'Completed {k}-fold cross validation for {algo} with {str(options)}')
+    print(f'Obtained average accuracy of: {average_accuracy}\n')
+
+    return average_accuracy
 
 def get_precision_scores(clf, test_X, test_Y):
     pred_Y = clf.predict(test_X)
