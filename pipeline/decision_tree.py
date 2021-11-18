@@ -3,7 +3,7 @@
 
 # # Import Libraries
 
-# In[2]:
+# In[ ]:
 
 
 import numpy as np
@@ -17,7 +17,7 @@ from sklearn import neighbors
 
 # # Retrieve Dataset
 
-# In[3]:
+# In[ ]:
 
 
 from preprocess import retrieve_dataset, preprocess, to_np
@@ -111,7 +111,7 @@ print(f'Number of features: {len(X_train_flatten[0])}')
 
 # # Train Decision Tree Model With K-Fold Cross Validation
 
-# In[7]:
+# In[ ]:
 
 
 import importlib
@@ -121,15 +121,62 @@ from run_algo_with_kfold import kfold_cross_validation
 
 depths = [5, 6, 7, 8, 9, 10]
 k = 5
-final_accuracies = []
+clfs_and_accuracies = []
 
 for depth in depths:
-  final_accuracy = kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth})
-  final_accuracies.append(final_accuracy)
+  clf_and_accuracy = kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth})
+  clfs_and_accuracies.append(clf_and_accuracy)
 
 
-# In[6]:
+# In[ ]:
 
 
-print(final_accuracies)
+print(clfs_and_accuracies)
+
+
+# In[ ]:
+
+
+import importlib
+import run_algo_with_kfold
+importlib.reload(run_algo_with_kfold)
+from run_algo_with_kfold import get_precision_scores
+
+
+# In[ ]:
+
+
+for clf_and_accuracy in clfs_and_accuracies:
+  (clf, accuracy) = clf_and_accuracy
+  print(get_precision_scores(clf, X_test_flatten, Y_test))
+
+
+# In[1]:
+
+
+import importlib
+import run_algo_with_kfold
+importlib.reload(run_algo_with_kfold)
+from run_algo_with_kfold import get_roc_auc_curve
+
+fprs = []
+tprs = []
+roc_aucs = []
+for clf_and_accuracy in clfs_and_accuracies:
+  (fpr, tpr, roc_auc) = get_roc_auc_curve(clf, X_train_flatten, Y_train, X_test_flatten, Y_test, {'is_svm': False})
+  fprs.append(fpr)
+  tprs.append(tpr)
+  roc_aucs.append(roc_auc)
+
+
+# In[ ]:
+
+
+import importlib
+import run_algo_with_kfold
+importlib.reload(run_algo_with_kfold)
+from run_algo_with_kfold import visualize_roc_auc_curve
+for depth, fpr, tpr, roc_auc in zip(depths, fprs, tprs, roc_aucs):
+  title = f'ROC curve for depth = {str(depth)}'
+  visualize_roc_auc_curve(title, fpr, tpr, roc_auc, len(np.unique(Y_test)))
 
