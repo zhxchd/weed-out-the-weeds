@@ -72,7 +72,7 @@ def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, vali
         pickle.dump(model, open(model_file_name, 'wb'))
         print(f'Trained kfold model and saved to file: {model_file_name}')
     finally:
-        # evaluation = get_precision_scores(model, cf_test_X, cf_test_Y)
+        # evaluation = get_precision_scores(model, validation_X, validation_Y)
         accuracy = model.score(validation_X, validation_Y)
         print(f'Split accuracy: {str(accuracy)}')
     return (model, accuracy)
