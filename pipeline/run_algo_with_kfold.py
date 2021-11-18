@@ -57,6 +57,15 @@ def get_model_file_name(algo, options, append_text=''):
     file_name += '.pickle'
     return file_name
 
+def get_final_model_file_name(algo, options, append_text=''):
+    initial_name = f'{algo}_{str(options)}_final'
+    processed_name = re.sub(r'[^\w]', '', initial_name).replace(' ', '_')
+    file_name = f'models/{processed_name}'
+    if append_text:
+        file_name += f'_{append_text}'
+    file_name += '.pickle'
+    return file_name
+
 
 def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, validation_index, append_text=''):
     model_file_name = get_model_file_name(algo, options, append_text)
@@ -91,6 +100,15 @@ def load_or_train_model(algo, options, train_X, train_Y):
     return model
 
 
+def train_final_model(algo, options, train_X, train_Y):
+    model_file_name = get_final_model_file_name(algo, options)
+    model = algos[algo](train_X, train_Y, options)
+
+    pickle.dump(model, open(model_file_name, 'wb'))
+    print(f'Trained final model and saved to file: {model_file_name}\n')
+    return model
+
+
 def kfold_cross_validation(k, train_X, train_Y, algo, options):
     print(f'Running {k}-fold cross validation for {algo} with {str(options)}')
     kf = KFold(n_splits=k)
@@ -104,7 +122,7 @@ def kfold_cross_validation(k, train_X, train_Y, algo, options):
     average_accuracy = sum(accuracies) / k
     print(
         f'Completed {k}-fold cross validation for {algo} with {str(options)}')
-    print(f'Obtained average accuracy of: {average_accuracy}\n')
+    print(f'Obtained average accuracy of: {average_accuracy}')
     model = load_or_train_model(algo, options, train_X, train_Y)
     return (model, average_accuracy)
 

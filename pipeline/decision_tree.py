@@ -117,7 +117,7 @@ print(f'Number of features: {len(X_train_flatten[0])}')
 import importlib
 import run_algo_with_kfold
 importlib.reload(run_algo_with_kfold)
-from run_algo_with_kfold import kfold_cross_validation, load_or_train_model, get_precision_scores
+from run_algo_with_kfold import kfold_cross_validation, train_final_model, get_precision_scores
 
 depths = [5, 6, 7, 8, 9, 10]
 k = 5
@@ -143,7 +143,7 @@ print(f'Best depth: {best_depth}')
 # In[ ]:
 
 
-model = load_or_train_model('decision_tree', {'depth': depth}, X_train, Y_train)
+model = train_final_model('decision_tree', {'depth': depth}, X_train, Y_train)
 
 print(get_precision_scores(model, X_test_flatten, Y_test))
 
