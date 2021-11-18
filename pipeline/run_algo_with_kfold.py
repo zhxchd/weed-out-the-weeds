@@ -58,10 +58,10 @@ def get_model_file_name(algo, options, append_text=''):
     return file_name
 
 
-def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, test_index, append_text=''):
+def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, validation_index, append_text=''):
     model_file_name = get_model_file_name(algo, options, append_text)
-    cf_test_X = [train_X[index] for index in test_index]
-    cf_test_Y = [train_Y[index] for index in test_index]
+    validation_X = [train_X[index] for index in validation_index]
+    validation_Y = [train_Y[index] for index in validation_index]
     try:
         model = pickle.load(open(model_file_name, 'rb'))
         print(f'Loaded kfold model from file: {model_file_name}')
@@ -73,7 +73,7 @@ def load_or_train_kfold_model(algo, options, train_X, train_Y, train_index, test
         print(f'Trained kfold model and saved to file: {model_file_name}')
     finally:
         # evaluation = get_precision_scores(model, cf_test_X, cf_test_Y)
-        accuracy = model.score(cf_test_X, cf_test_Y)
+        accuracy = model.score(validation_X, validation_Y)
         print(f'Split accuracy: {str(accuracy)}')
     return (model, accuracy)
 
