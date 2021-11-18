@@ -109,7 +109,7 @@ print(f'Number of training instances: {len(X_train_flatten)}')
 print(f'Number of features: {len(X_train_flatten[0])}')
 
 
-# # Train Decision Tree Model With K-Fold Cross Validation
+# # Find Best Depth Using K-Fold Cross Validation
 
 # In[ ]:
 
@@ -117,9 +117,9 @@ print(f'Number of features: {len(X_train_flatten[0])}')
 import importlib
 import run_algo_with_kfold
 importlib.reload(run_algo_with_kfold)
-from run_algo_with_kfold import kfold_cross_validation
+from run_algo_with_kfold import kfold_cross_validation, load_or_train_model, get_precision_scores
 
-depths = [5, 6, 7, 8, 9, 10]
+depths = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 k = 5
 clfs_and_accuracies = []
 
@@ -127,56 +127,22 @@ for depth in depths:
   clf_and_accuracy = kfold_cross_validation(k, X_train_flatten, Y_train, 'decision_tree', {'depth': depth})
   clfs_and_accuracies.append(clf_and_accuracy)
 
+highest_accuracy = 0
+best_depth = 0
+
+for idx, val in enumerate(clfs_and_accuracies):
+  clf, accuracy = val
+  if accuracy > highest_accuracy:
+    best_depth = depths[idx]
+    highest_accuracy = accuracy
+
+
+# # Train Final Model
 
 # In[ ]:
 
 
-print(clfs_and_accuracies)
+model = load_or_train_model('decision_tree', {'depth': depth}, X_train, Y_train)
 
-
-# In[ ]:
-
-
-import importlib
-import run_algo_with_kfold
-importlib.reload(run_algo_with_kfold)
-from run_algo_with_kfold import get_precision_scores
-
-
-# In[ ]:
-
-
-for clf_and_accuracy in clfs_and_accuracies:
-  (clf, accuracy) = clf_and_accuracy
-  print(get_precision_scores(clf, X_test_flatten, Y_test))
-
-
-# In[1]:
-
-
-import importlib
-import run_algo_with_kfold
-importlib.reload(run_algo_with_kfold)
-from run_algo_with_kfold import get_roc_auc_curve
-
-fprs = []
-tprs = []
-roc_aucs = []
-for clf_and_accuracy in clfs_and_accuracies:
-  (fpr, tpr, roc_auc) = get_roc_auc_curve(clf, X_train_flatten, Y_train, X_test_flatten, Y_test, {'is_svm': False})
-  fprs.append(fpr)
-  tprs.append(tpr)
-  roc_aucs.append(roc_auc)
-
-
-# In[ ]:
-
-
-import importlib
-import run_algo_with_kfold
-importlib.reload(run_algo_with_kfold)
-from run_algo_with_kfold import visualize_roc_auc_curve
-for depth, fpr, tpr, roc_auc in zip(depths, fprs, tprs, roc_aucs):
-  title = f'ROC curve for depth = {str(depth)}'
-  visualize_roc_auc_curve(title, fpr, tpr, roc_auc, len(np.unique(Y_test)))
+print(get_precision_scores(model, X_test_flatten, Y_test))
 
