@@ -1,15 +1,11 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
-from IPython import get_ipython
 
 # %% [markdown]
 # # Import Libraries
 
 # %%
-get_ipython().run_line_magic('pip', 'install -r requirements.txt')
-get_ipython().run_line_magic('load_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
