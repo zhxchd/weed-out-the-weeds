@@ -57,12 +57,16 @@ def get_final_model_file_name(algo, options, append_text=''):
     return file_name
 
 def train_model(algo, options, train_X, train_Y, save_model=False):
-    model = algos[algo](train_X, train_Y, options)
+    model_file_name = get_final_model_file_name(algo, options)
+    try:
+        model = pickle.load(open(model_file_name, 'rb'))
+        print(f'Loaded model from file: {model_file_name}')
+    except FileNotFoundError:
+        model = algos[algo](train_X, train_Y, options)
 
-    if save_model:
-        model_file_name = get_final_model_file_name(algo, options)
-        pickle.dump(model, open(model_file_name, 'wb'))
-        print(f'Saved final model to file: {model_file_name}\n')
+        if save_model:
+            pickle.dump(model, open(model_file_name, 'wb'))
+            print(f'Saved final model to file: {model_file_name}\n')
     return model
 
 
