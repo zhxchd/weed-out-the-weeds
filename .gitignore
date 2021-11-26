@@ -2,3 +2,4 @@
 __pycache__
 .vscode/settings.json
 *.pickle
+pipeline/models/resnet50.h5
