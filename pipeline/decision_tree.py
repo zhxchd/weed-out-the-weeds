@@ -143,7 +143,7 @@ print(f'Best depth: {best_depth}')
 # In[ ]:
 
 
-model = train_model('decision_tree', {'depth': depth}, X_train_flatten, Y_train, True)
+model = train_model('decision_tree', {'depth': best_depth}, X_train_flatten, Y_train, True)
 
 print(get_precision_scores(model, X_test_flatten, Y_test))
 
