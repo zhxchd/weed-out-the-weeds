@@ -25,7 +25,7 @@ from preprocess import retrieve_dataset, preprocess, to_np
 (train_ds_raw, test_ds_raw), metadata = retrieve_dataset(should_shuffle_files=True)
 
 train_ds = preprocess(train_ds_raw, {
-  'is_undersample_negative': True,
+  'is_undersample_negative': False,
   'reduce_dataset_to': 0,
   'is_grayscale': False, 
   'is_downsample64': False,
@@ -34,7 +34,7 @@ train_ds = preprocess(train_ds_raw, {
 })
 
 test_ds = preprocess(test_ds_raw, {
-  'is_undersample_negative': True,
+  'is_undersample_negative': False,
   'reduce_dataset_to': 0,
   'is_grayscale': False, 
   'is_downsample64': False, 
@@ -119,7 +119,7 @@ import run_algo_with_kfold
 importlib.reload(run_algo_with_kfold)
 from run_algo_with_kfold import kfold_cross_validation, train_model, get_precision_scores
 
-depths = [3, 4, 5, 6, 7, 8, 9, 10]
+depths = [3, 4, 5, 6, 7, 8]
 k = 5
 
 accuracies = []
@@ -143,7 +143,7 @@ print(f'Best depth: {best_depth}')
 # In[ ]:
 
 
-model = train_model('decision_tree', {'depth': depth}, X_train_flatten, Y_train, True)
+model = train_model('decision_tree', {'depth': best_depth}, X_train_flatten, Y_train, True)
 
 print(get_precision_scores(model, X_test_flatten, Y_test))
 
