@@ -39,7 +39,8 @@ def run_svm(train_X, train_Y, options):
 
 def run_logistic_reg(train_X, train_Y, options):
     max_iter = options['max_iter']
-    clf = LogisticRegression(max_iter=max_iter)
+    C = options['C']
+    clf = LogisticRegression(max_iter=max_iter, C=C)
     clf.fit(train_X, train_Y)
     return clf
 
